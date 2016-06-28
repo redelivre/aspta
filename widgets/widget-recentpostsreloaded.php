@@ -21,7 +21,7 @@ class Widget_Ultimos extends WP_Widget {
 				$post_type = '';
 			
 			$ultimos = new WP_Query( array( 
-				'caller_get_posts'	=> 1,
+				'ignore_sticky_posts'	=> 1,
 				'posts_per_page'	=> 5,
 				'post__not_in'		=> array( $post->ID ),
 				'post_type'			=> $post_type

@@ -4,7 +4,7 @@
 		<div id="noticias">
 		
 			<?php
-			query_posts( array( 'post_type' => 'post', 'posts_per_page' => 3, 'post__not_in' => $destaque, 'caller_get_posts' => 1 ) );
+			query_posts( array( 'post_type' => 'post', 'posts_per_page' => 3, 'post__not_in' => $destaque, 'ignore_sticky_posts' => 1 ) );
 			if ( have_posts() ) : while ( have_posts() ) : the_post();
 			?>
 			
@@ -20,10 +20,14 @@
 		</div><!-- #noticias -->		
 		<div id="wrapper-transgenicos">
 			<div id="transgenicos">
-				<h6><a href="<?php echo get_page_link( get_page_by_title( 'Brasil livre de transgênicos e agrotóxicos' )->ID ); ?>" title="Brasil livre de transgênicos e agrotóxicos">Brasil livre de transgênicos e agrotóxicos</a></h6>
-				
+				<?php $page_trans = get_page_by_title( 'Brasil livre de transgênicos e agrotóxicos' );
+				if(is_object($page_trans))
+				{?>
+					<h6><a href="<?php echo get_page_link( $page_trans->ID ); ?>" title="Brasil livre de transgênicos e agrotóxicos">Brasil livre de transgênicos e agrotóxicos</a></h6>
 				<?php
-				query_posts( array( 'posts_per_page' => 3, 'post_type' => 'campanha', 'caller_get_posts' => 1 ) );
+				}
+				
+				query_posts( array( 'posts_per_page' => 3, 'post_type' => 'campanha', 'ignore_sticky_posts' => 1 ) );
 				if ( have_posts() ) :
 					$i = 1;
 				
@@ -79,9 +83,15 @@
 				
 		<div id="wrapper-revista">
 			<div id="revista">
-				<h6><a href="<?php echo get_page_link( get_page_by_title( 'Revista Agriculturas' )->ID ); ?>" title="Revista Agriculturas">Revista Agriculturas</a></h6>
 				<?php
-				query_posts( array( 'post_type' => 'revista', 'posts_per_page' => 1, 'post_parent' => 0, 'caller_get_posts' => 1 ) );
+				$page_revista = get_page_by_title( 'Revista Agriculturas' );
+				if(is_object($page_revista))
+				{
+				?>
+					<h6><a href="<?php echo get_page_link( $page_revista->ID ); ?>" title="Revista Agriculturas">Revista Agriculturas</a></h6>
+				<?php
+				}
+				query_posts( array( 'post_type' => 'revista', 'posts_per_page' => 1, 'post_parent' => 0, 'ignore_sticky_posts' => 1 ) );
 				if ( have_posts() ) : while ( have_posts() ) : the_post();
 				?>
 			

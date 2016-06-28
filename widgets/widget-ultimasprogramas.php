@@ -36,7 +36,7 @@ class Widget_UltimosProgramas extends WP_Widget {
 			
 			$ultimos = new WP_Query( array(
 				'post__in' => $programas_posts,
-				'caller_get_posts' => 1,
+				'ignore_sticky_posts' => 1,
 				'posts_per_page' => 5,
 			) );
 			
@@ -49,7 +49,7 @@ class Widget_UltimosProgramas extends WP_Widget {
 			
 			$ultimos = new WP_Query( array(
 				'programas'	=> $page_slug,
-				'caller_get_posts' => 1,
+				'ignore_sticky_posts' => 1,
 				'posts_per_page' => 5,
 				'post__not_in'  => array( $post->ID )
 			) );

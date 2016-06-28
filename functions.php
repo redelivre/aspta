@@ -403,7 +403,7 @@ function childtheme_primary_aside() {
 	
 	//TODO Biblioteca
 
-	if ( is_sidebar_active('primary-aside') ) {
+	if ( is_active_sidebar('primary-aside') ) {
 	// antiga condicional if (is_sidebar_active('primary-aside') && is_sidebar_active('primary-aside-programas'))
 		echo thematic_before_widget_area('primary-aside');
 		
@@ -477,7 +477,13 @@ function is_child_of ( $parent, $child = '' ) {
 function childtheme_override_brandingopen() { ?>
 	<div id="top-menu">
 		<div id="servicos">
-			<a href="<?php echo get_page_link( get_page_by_title( 'Contato' )->ID ); ?>" class="contato">Contato</a>
+			<?php
+			$page_contato = get_page_by_title( 'Contato' );
+			if(is_object($page_contato))
+			{
+				?>
+				<a href="<?php echo get_page_link( $page_contato->ID ); ?>" class="contato">Contato</a><?php
+			}?>
 			<a href="<?php bloginfo( 'rss2_url' ); ?>" class="feed">Assine o feed</a>
 		</div><!-- #servicos -->
 		
@@ -549,29 +555,32 @@ function destaque() {
 						break;
 					}
 				}
-
-				$sticky = new WP_Query('p='.$arrayStickys[0]);
-
-				if ( $sticky->have_posts() ) : while ( $sticky->have_posts() ) :
-					$sticky->the_post();
-					$destaque[] = $sticky->post->ID;
-			?>
-			<div id="wrapper-post">
-				<h2 class="entry-title"><a href="<?php the_permalink(); ?>" title="<?php the_title_attribute(); ?>"><?php echo strip_tags(get_the_title()); ?></a></h2>
-				<div class="entry-content">
-					<?php the_excerpt(); ?> 
-				</div>
-				
-				<a href="<?php the_permalink(); ?>" class="leia-mais" title="<?php the_title_attribute('before=Continue lendo "&after="'); ?>">Continue lendo</a>
-			</div>
-			
-			<div class="post-thumbnail">
-				<a href="<?php the_permalink(); ?>" title="<?php the_title_attribute(); ?>">
-					<?php echo the_post_thumbnail( 'destaque', array( 'title' => get_the_title() ) ); ?>
-				</a>
-			</div>
-			
-			<?php endwhile; endif; ?>
+				if(count($arrayStickys) > 0)
+				{
+					$sticky = new WP_Query('p='.$arrayStickys[0]);
+	
+					if ( $sticky->have_posts() ) : while ( $sticky->have_posts() ) :
+						$sticky->the_post();
+						$destaque[] = $sticky->post->ID;
+					
+					?>
+					<div id="wrapper-post">
+						<h2 class="entry-title"><a href="<?php the_permalink(); ?>" title="<?php the_title_attribute(); ?>"><?php echo strip_tags(get_the_title()); ?></a></h2>
+						<div class="entry-content">
+							<?php the_excerpt(); ?> 
+						</div>
+						
+						<a href="<?php the_permalink(); ?>" class="leia-mais" title="<?php the_title_attribute('before=Continue lendo "&after="'); ?>">Continue lendo</a>
+					</div>
+					
+					<div class="post-thumbnail">
+						<a href="<?php the_permalink(); ?>" title="<?php the_title_attribute(); ?>">
+							<?php echo the_post_thumbnail( 'destaque', array( 'title' => get_the_title() ) ); ?>
+						</a>
+					</div>
+					
+					<?php endwhile; endif; 
+				}?>
 		</div><!-- #destaque -->
 	</div><!-- #wrapper-destaque -->
 	<?php endif;
@@ -951,7 +960,7 @@ function childtheme_footer() { ?>
                     		<h3><a href="<?php echo get_permalink( $programa->ID ); ?> "><?php echo $programa->post_title; ?></a></h3>
                     		<ul>
                     			<?php
-                    			query_posts( array( 'programas' => $programa->post_name, 'caller_get_posts' => 1, 'posts_per_page' => 2 ) ); 
+                    			query_posts( array( 'programas' => $programa->post_name, 'ignore_sticky_posts' => 1, 'posts_per_page' => 2 ) ); 
                     			while ( have_posts() ) : the_post(); ?>
                     			<li><a href="<?php the_permalink(); ?>"><?php echo strip_tags(get_the_title()); ?></a></li>	
                     			<?php endwhile; ?>
@@ -1009,5 +1018,116 @@ add_filter('pre_get_posts', 'filter_search');
 
 add_action( 'init', create_function( '$a', "remove_action( 'init', 'wp_version_check' );" ), 2 );
 add_filter( 'pre_option_update_core', create_function( '$a', "return null;" ) );
+
+/**
+ * thematic_theme_setup
+ *
+ * @todo review for impact of deprecations on child themes & fix comment blocks?
+ * @since 1.0.0?
+ */
+function childtheme_override_theme_setup()
+{
+	global $content_width;
+
+	/**
+	 * Set the content width based on the theme's design and stylesheet.
+	 *
+	 * Used to set the width of images and content. Should be equal to the width the theme
+	 * is designed for, generally via the style.css stylesheet.
+	 *
+	 * @since 1.0.0
+	 */
+	if ( !isset($content_width) ) {
+		$content_width = 600;
+	}
+
+	// Check for MultiSite
+	define( 'THEMATIC_MB', is_multisite()  );
+
+	// Create the feedlinks
+	if ( ! current_theme_supports( 'thematic_legacy_feedlinks' ) ) {
+		add_theme_support( 'automatic-feed-links' );
+	}
+
+	if ( apply_filters( 'thematic_post_thumbs', true ) ) {
+		add_theme_support( 'post-thumbnails' );
+	}
+
+	add_theme_support( 'thematic_superfish' );
+
+	// Path constants
+	define( 'THEMATIC_LIB',  get_template_directory() .  '/library' );
+
+	// Create Theme Options Page
+	require_once ( THEMATIC_LIB . '/extensions/theme-options.php' );
+
+	// Need a little help from our helper functions
+	require_once ( THEMATIC_LIB . '/extensions/helpers.php' );
+
+	// Add functionality only when not using old xhtml markup
+	if( !thematic_is_legacy_xhtml() ) {
+		add_theme_support( 'thematic_meta_viewport' );
+		add_theme_support('thematic_customizer_layout');
+	}
+
+	// Load widgets
+	require_once ( THEMATIC_LIB . '/extensions/widgets.php' );
+
+	// Load custom header extensions
+	require_once ( THEMATIC_LIB . '/extensions/header-extensions.php' );
+
+	// Load custom content filters
+	require_once ( THEMATIC_LIB . '/extensions/content-extensions.php' );
+
+	// Load custom Comments filters
+	require_once ( THEMATIC_LIB . '/extensions/comments-extensions.php' );
+
+	// Load custom discussion filters
+	require_once ( THEMATIC_LIB . '/extensions/discussion-extensions.php' );
+
+	// Load custom Widgets
+	require_once ( THEMATIC_LIB . '/extensions/widgets-extensions.php' );
+
+	// Load the Comments Template functions and callbacks
+	require_once ( THEMATIC_LIB . '/extensions/discussion.php' );
+
+	// Load custom sidebar hooks
+	require_once ( THEMATIC_LIB . '/extensions/sidebar-extensions.php' );
+
+	// Load custom footer hooks
+	require_once ( THEMATIC_LIB . '/extensions/footer-extensions.php' );
+
+	// Add Dynamic Contextual Semantic Classes
+	require_once ( THEMATIC_LIB . '/extensions/dynamic-classes.php' );
+
+	// Load shortcodes
+	require_once ( THEMATIC_LIB . '/extensions/shortcodes.php' );
+
+	// Load Theme Customizer support
+	require_once ( THEMATIC_LIB . '/extensions/customizer.php' );
+
+	// Adds filters for the description/meta content in archive templates
+	add_filter( 'archive_meta', 'wptexturize' );
+	add_filter( 'archive_meta', 'convert_smilies' );
+	add_filter( 'archive_meta', 'convert_chars' );
+	add_filter( 'archive_meta', 'wpautop' );
+
+	// Remove the WordPress Generator - via http://blog.ftwr.co.uk/archives/2007/10/06/improving-the-wordpress-generator/
+	function thematic_remove_generators() {
+		return '';
+	}
+	if ( apply_filters( 'thematic_hide_generators', true ) ) {
+		add_filter( 'the_generator', 'thematic_remove_generators' );
+	}
+
+	// Translate, if applicable
+	load_theme_textdomain( 'thematic', THEMATIC_LIB . '/languages' );
+
+	$locale = get_locale();
+	$locale_file = THEMATIC_LIB . "/languages/$locale.php";
+	if ( is_readable($locale_file) ) {
+		require_once ($locale_file);
+	}
+}
 
 ?>

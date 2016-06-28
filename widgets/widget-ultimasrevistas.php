@@ -18,7 +18,7 @@ class Widget_UltimasRevistas extends WP_Widget {
  			$number = 4;
 		
 		$ultimas = new WP_Query( array( 
-			'caller_get_posts' => 1,
+			'ignore_sticky_posts' => 1,
 			'post_type'	=> 'revista',
 			'posts_per_page' => $number,
 			'post_parent'	=> 0,
